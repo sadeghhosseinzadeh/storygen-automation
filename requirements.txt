@@ -1,0 +1,7 @@
+git+https://github.com/sadeghhosseinzadeh/storygen.git
+
+rembg[cpu]
+Pillow
+requests
+numpy
+scikit-learn
