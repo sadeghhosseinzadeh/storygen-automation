@@ -1,8 +1,9 @@
 name: Story Generation
 
 on:
-  repository_dispatch:   # triggered by your VPS bot
-  
+  repository_dispatch:
+    types: [storygen]   # must match event_type your VPS sends
+  workflow_dispatch:     # optional manual trigger
 
 jobs:
   save-order:
@@ -14,9 +15,11 @@ jobs:
 
       - name: Save order payload
         run: |
-          mkdir -p orders
-          echo '${{ toJson(github.event.client_payload) }}' > orders/order_${{ github.event.client_payload.order_id }}.json
+          mkdir -p orders/${{ github.event.client_payload.order_id }}
+          echo '${{ toJson(github.event.client_payload) }}' \
+            > orders/${{ github.event.client_payload.order_id }}/metadata.json
 
-      - name: Save photo files list
+      - name: Save photo list
         run: |
-          echo '${{ toJson(github.event.client_payload.photo_files) }}' > orders/photos_${{ github.event.client_payload.order_id }}.txt
+          echo '${{ toJson(github.event.client_payload.photo_files) }}' \
+            > orders/${{ github.event.client_payload.order_id }}/photos.txt
