@@ -1,24 +1,22 @@
 name: Story Generation
 
 on:
-  repository_dispatch:   
-  workflow_dispatch:     
+  repository_dispatch:   # triggered by your VPS bot
+  workflow_dispatch:     # optional manual trigger
 
 jobs:
-  build-story:
+  save-order:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      - name: Save order payload
+        run: |
+          mkdir -p orders
+          echo '${{ toJson(github.event.client_payload) }}' > orders/order_${{ github.event.client_payload.order_id }}.json
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run story generator
-        run: python scripts/generate_story.py
+      - name: Save photo files list
+        run: |
+          echo '${{ toJson(github.event.client_payload.photo_files) }}' > orders/photos_${{ github.event.client_payload.order_id }}.txt
