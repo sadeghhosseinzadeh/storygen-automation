@@ -17,3 +17,7 @@ jobs:
           mkdir -p orders/${{ github.event.client_payload.order_id }}
           echo '${{ toJson(github.event.client_payload) }}' \
             > orders/${{ github.event.client_payload.order_id }}/metadata.json
+
+      - name: Show saved metadata
+        run: cat orders/${{ github.event.client_payload.order_id }}/metadata.json
+
