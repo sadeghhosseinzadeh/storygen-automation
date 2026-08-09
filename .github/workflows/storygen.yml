@@ -1,0 +1,26 @@
+name: Story Generation
+
+on:
+  workflow_dispatch:   # allows manual trigger
+  push:
+    branches:
+      - main           # runs when you push to main
+  repository_dispatch: # allows external API trigger (from your bot)
+
+jobs:
+  build-story:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run story generator
+        run: python scripts/generate_story.py
