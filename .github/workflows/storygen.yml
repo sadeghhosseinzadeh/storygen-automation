@@ -2,7 +2,7 @@ name: Story Generation
 
 on:
   repository_dispatch:   # triggered by your VPS bot
-  workflow_dispatch:     # optional manual trigger
+  
 
 jobs:
   save-order:
