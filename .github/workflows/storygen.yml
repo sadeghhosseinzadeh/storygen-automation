@@ -1,15 +1,14 @@
 name: Story Generation
 
 on:
-  workflow_dispatch:   # allows manual trigger
-  push:
-    branches:
-      - main           # runs when you push to main
-  repository_dispatch: # allows external API trigger (from your bot)
+  repository_dispatch:
+    types: [storygen]   # must match event_type from VPS
+  workflow_dispatch:     # optional manual trigger
 
 jobs:
   build-story:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -24,14 +23,13 @@ jobs:
 
       - name: Debug payload
         run: echo '${{ toJson(github.event.client_payload) }}'
-        
+
       - name: Save order payload
         run: |
           mkdir -p orders/${{ github.event.client_payload.order_id }}
           echo '${{ toJson(github.event.client_payload) }}' \
             > orders/${{ github.event.client_payload.order_id }}/metadata.json
 
-      # Instead of running a missing script, just save info
       - name: Save photo list
         run: |
           echo '${{ toJson(github.event.client_payload.photo_files) }}' \
