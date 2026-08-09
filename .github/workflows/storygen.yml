@@ -1,17 +1,26 @@
 name: Story Generation
 
 on:
-  repository_dispatch:
-    types: [storygen]   # must match event_type your VPS sends
-  workflow_dispatch:     # optional manual trigger
+  workflow_dispatch:   # allows manual trigger
+  push:
+    branches:
+      - main           # runs when you push to main
+  repository_dispatch: # allows external API trigger (from your bot)
 
 jobs:
-  save-order:
+  build-story:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
       - name: Save order payload
         run: |
@@ -19,6 +28,7 @@ jobs:
           echo '${{ toJson(github.event.client_payload) }}' \
             > orders/${{ github.event.client_payload.order_id }}/metadata.json
 
+      # Instead of running a missing script, just save info
       - name: Save photo list
         run: |
           echo '${{ toJson(github.event.client_payload.photo_files) }}' \
