@@ -1,15 +1,13 @@
 name: Story Generation
 
 on:
-  workflow_dispatch:   # allows manual trigger
-  push:
-    branches:
-      - main           # runs when you push to main
-  repository_dispatch: # allows external API trigger (from your bot)
+  repository_dispatch:   
+  workflow_dispatch:     
 
 jobs:
   build-story:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
