@@ -22,6 +22,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Debug payload
+        run: echo '${{ toJson(github.event.client_payload) }}'
+        
       - name: Save order payload
         run: |
           mkdir -p orders/${{ github.event.client_payload.order_id }}
