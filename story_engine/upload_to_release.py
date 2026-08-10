@@ -6,34 +6,28 @@ from pathlib import Path
 import mimetypes
 
 def upload_asset(upload_url, file_path, token):
-    """
-    Uploads a single file to a GitHub release using the release upload_url.
-    """
-
     file_path = Path(file_path)
     file_name = file_path.name
 
-    # GitHub requires the upload_url to end with "?name=filename"
-    url = upload_url.replace("{?name,label}", f"?name={file_name}")
+    # FIX: Replace template part
+    upload_url = upload_url.replace("{?name,label}", f"?name={file_name}")
 
-    mime_type = mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/octet-stream"
+    }
 
     with open(file_path, "rb") as f:
-        response = requests.post(
-            url,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": mime_type
-            },
-            data=f.read()
-        )
+        data = f.read()
+
+    response = requests.post(upload_url, headers=headers, data=data)
 
     if response.status_code not in [200, 201]:
         raise Exception(
             f"Failed to upload {file_name}: {response.status_code} {response.text}"
         )
 
-    print(f"Uploaded: {file_name}")
+    print(f"Uploaded asset: {file_name}")
 
 
 def main():
