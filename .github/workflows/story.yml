@@ -40,10 +40,8 @@ jobs:
       # ---------------------------------------------------
       - name: Download release assets
         run: |
-          mkdir -p assets
-          gh release download "${{ github.event.release.tag_name }}" \
-            --repo "${{ github.repository }}" \
-            --dir assets
+          gh release download ${{ github.event.release.id }} --repo ${{ github.repository }} --dir assets
+
 
       # ---------------------------------------------------
       # 5. Set up Python
