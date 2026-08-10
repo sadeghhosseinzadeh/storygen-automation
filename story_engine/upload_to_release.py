@@ -10,7 +10,12 @@ def upload_asset(upload_url, file_path, token):
     file_name = file_path.name
 
     # FIX: Replace template part
-    upload_url = upload_url.replace("{?name,label}", f"?name={file_name}")
+    if "{?name,label}" in upload_url:
+        upload_url = upload_url.replace("{?name,label}", f"?name={file_name}")
+    else:
+        # Some runners return "?name=" already
+        if "?" not in upload_url:
+            upload_url = f"{upload_url}?name={file_name}"
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -28,6 +33,7 @@ def upload_asset(upload_url, file_path, token):
         )
 
     print(f"Uploaded asset: {file_name}")
+
 
 
 def main():
