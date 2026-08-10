@@ -1,5 +1,10 @@
 name: Story Generator
 
+permissions:
+  contents: write
+  actions: write
+  packages: write
+
 on:
   release:
     types: [published, edited]
