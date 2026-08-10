@@ -16,19 +16,32 @@ jobs:
         uses: actions/checkout@v4
 
       # ---------------------------------------------------
-      # 2. Download release assets (order.json, photo_1.png)
+      # 2. Install GitHub CLI
       # ---------------------------------------------------
-      - name: Download release assets
-        uses: actions/download-release-asset@v1
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          tag: ${{ github.event.release.tag_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: assets/
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
 
       # ---------------------------------------------------
-      # 3. Set up Python
+      # 3. Authenticate GitHub CLI
+      # ---------------------------------------------------
+      - name: Authenticate GH CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      # ---------------------------------------------------
+      # 4. Download release assets (order.json, photo_1.png)
+      # ---------------------------------------------------
+      - name: Download release assets
+        run: |
+          mkdir -p assets
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --dir assets
+
+      # ---------------------------------------------------
+      # 5. Set up Python
       # ---------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -36,14 +49,14 @@ jobs:
           python-version: "3.10"
 
       # ---------------------------------------------------
-      # 4. Install dependencies
+      # 6. Install dependencies
       # ---------------------------------------------------
       - name: Install dependencies
         run: |
           pip install -r story_engine/requirements.txt
 
       # ---------------------------------------------------
-      # 5. Run story generator
+      # 7. Run story generator
       # ---------------------------------------------------
       - name: Generate story
         run: |
@@ -52,7 +65,7 @@ jobs:
             --output_dir output
 
       # ---------------------------------------------------
-      # 6. Upload story back to release
+      # 8. Upload story back to release
       # ---------------------------------------------------
       - name: Upload story to release
         run: |
