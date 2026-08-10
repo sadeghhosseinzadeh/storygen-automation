@@ -1,0 +1,62 @@
+name: Story Generator
+
+on:
+  release:
+    types: [published, edited]
+
+jobs:
+  generate-story:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------
+      # 2. Download release assets (order.json, photo_1.png)
+      # ---------------------------------------------------
+      - name: Download release assets
+        uses: actions/download-release-asset@v1
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          tag: ${{ github.event.release.tag_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: assets/
+
+      # ---------------------------------------------------
+      # 3. Set up Python
+      # ---------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # ---------------------------------------------------
+      # 4. Install dependencies
+      # ---------------------------------------------------
+      - name: Install dependencies
+        run: |
+          pip install -r story_engine/requirements.txt
+
+      # ---------------------------------------------------
+      # 5. Run story generator
+      # ---------------------------------------------------
+      - name: Generate story
+        run: |
+          python story_engine/generate_story.py \
+            --assets_dir assets \
+            --output_dir output
+
+      # ---------------------------------------------------
+      # 6. Upload story back to release
+      # ---------------------------------------------------
+      - name: Upload story to release
+        run: |
+          python story_engine/upload_to_release.py \
+            --upload_url "${{ github.event.release.upload_url }}" \
+            --story_dir output \
+            --token "${{ secrets.GITHUB_TOKEN }}"
