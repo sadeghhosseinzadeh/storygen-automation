@@ -36,6 +36,7 @@ def upload_asset(upload_url, file_path, token):
 
 
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--upload_url", required=True, help="GitHub release upload_url")
