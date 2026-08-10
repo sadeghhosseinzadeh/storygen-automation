@@ -1,44 +1,80 @@
-name: Generate Story
+name: Story Generator
 
 permissions:
   contents: write
   actions: write
   packages: write
-  
+
 on:
   release:
     types: [published]
 
 jobs:
-  build:
+  generate-story:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download release assets (correct release ID)
-        run: |
-          gh release download ${{ github.event.release.id }} \
-            --repo ${{ github.repository }} \
-            --dir assets
-
-      - name: Install Python
+      # ---------------------------------------------------
+      # 2. Install GitHub CLI
+      # ---------------------------------------------------
+      - name: Install GitHub CLI
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
+          sudo apt-get install -y gh
 
+      # ---------------------------------------------------
+      # 3. Authenticate GitHub CLI
+      # ---------------------------------------------------
+      - name: Authenticate GH CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      # ---------------------------------------------------
+      # 4. Download release assets (order.json, photo_1.png)
+      # ---------------------------------------------------
+      - name: Download release assets
+        run: |
+          mkdir -p assets
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo "${{ github.repository }}" \
+            --dir assets
+
+      # ---------------------------------------------------
+      # 5. Set up Python
+      # ---------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # ---------------------------------------------------
+      # 6. Install dependencies
+      # ---------------------------------------------------
       - name: Install dependencies
         run: |
-          pip install pillow requests
+          pip install -r story_engine/requirements.txt
 
-      - name: Run story generator
+      # ---------------------------------------------------
+      # 7. Run story generator
+      # ---------------------------------------------------
+      - name: Generate story
         run: |
-          python3 story_engine/generate_story.py assets/order.json assets/photo_1.png
+          python story_engine/generate_story.py \
+            --assets_dir assets \
+            --output_dir output
 
-      - name: Upload story assets
+      # ---------------------------------------------------
+      # 8. Upload story back to release
+      # ---------------------------------------------------
+      - name: Upload story to release
         run: |
-          gh release upload ${{ github.event.release.id }} \
-            story.json story.png \
-            --repo ${{ github.repository }} \
-            --clobber
+          python story_engine/upload_to_release.py \
+            --upload_url "${{ github.event.release.upload_url }}" \
+            --story_dir output \
+            --token "${{ secrets.GITHUB_TOKEN }}"
