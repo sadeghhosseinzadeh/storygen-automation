@@ -9,13 +9,19 @@ def upload_asset(upload_url, file_path, token):
     file_path = Path(file_path)
     file_name = file_path.name
 
-    # FIX: Replace template part
-    if "{?name,label}" in upload_url:
-        upload_url = upload_url.replace("{?name,label}", f"?name={file_name}")
+    # Normalize upload URL
+    # Remove ALL GitHub template placeholders
+    upload_url = upload_url.replace("{?name,label}", "")
+    upload_url = upload_url.replace("{name}", "")
+    upload_url = upload_url.replace("{label}", "")
+
+    # Ensure ?name= is present
+    if "?" not in upload_url:
+        upload_url = f"{upload_url}?name={file_name}"
     else:
-        # Some runners return "?name=" already
-        if "?" not in upload_url:
-            upload_url = f"{upload_url}?name={file_name}"
+        # If ? exists but no name parameter, append it
+        if "name=" not in upload_url:
+            upload_url = f"{upload_url}&name={file_name}"
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -33,7 +39,6 @@ def upload_asset(upload_url, file_path, token):
         )
 
     print(f"Uploaded asset: {file_name}")
-
 
 
 
