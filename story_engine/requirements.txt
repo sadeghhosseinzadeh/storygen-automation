@@ -1,7 +1,0 @@
-# Core dependencies
-git+https://github.com/sadeghhosseinzadeh/storygen.git@main
-rembg[cpu]==2.0.50
-pillow==10.0.0
-
-# Optional helpers
-numpy>=1.24
