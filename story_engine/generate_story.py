@@ -41,7 +41,7 @@ def main():
             raise ValueError(f"Missing required field: {field}")
 
     # 5. Dynamically import the template module
-    module = importlib.import_module(f"story_engine.templates.{template_name}")
+    module = importlib.import_module(f"storygen.templates.{template_name}")
     generate_func = getattr(module, template_name)
 
     # 6. Collect arguments from order.json
