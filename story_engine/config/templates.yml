@@ -3,8 +3,6 @@
 template_1:
   required_fields:
     - photo_1
-    - main_color
-    - second_color
     - model_name
     - sizes
   optional_fields: []
@@ -14,8 +12,6 @@ template_2:
   required_fields:
     - photo_1
     - photo_2
-    - main_color
-    - second_color
     - brand_name
     - model_name
     - sizes
