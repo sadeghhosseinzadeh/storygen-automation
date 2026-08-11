@@ -2,32 +2,11 @@ import json
 import os
 import argparse
 from pathlib import Path
-from PIL import Image
+from storygen.story import generate_story  # ← use your package
 
 def load_order_json(order_path):
     with open(order_path, "r", encoding="utf-8") as f:
         return json.load(f)
-
-def generate_story_image(photo_path, output_path):
-    """
-    For now: simply copy the input photo and save it as story.png.
-    Later: replace this with your real story generation logic.
-    """
-    img = Image.open(photo_path)
-    img.save(output_path)
-
-def write_story_json(order, output_path):
-    """
-    Creates a simple JSON describing the story result.
-    """
-    story_data = {
-        "order_id": order["order_id"],
-        "status": "done",
-        "story_file": "story.png"
-    }
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(story_data, f, indent=4)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -37,7 +16,6 @@ def main():
 
     assets_dir = Path(args.assets_dir)
     output_dir = Path(args.output_dir)
-
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # -------------------------------------------------------
@@ -57,16 +35,30 @@ def main():
         raise FileNotFoundError("photo_1.png not found in assets directory")
 
     # -------------------------------------------------------
-    # 3. Generate story image (copy photo)
+    # 3. Normalize template number (user may send "1")
     # -------------------------------------------------------
-    story_image_path = output_dir / "story.png"
-    generate_story_image(photo_path, story_image_path)
+    template_raw = str(order.get("template", "1")).strip()
+    template_name = f"template_{template_raw}"
 
     # -------------------------------------------------------
-    # 4. Write story.json
+    # 4. Generate story using storygen
+    # -------------------------------------------------------
+    story = generate_story(
+        template_name=template_name,
+        shoe_path=str(photo_path),
+        model_name=order.get("model_name", "Unknown Model"),
+        sizes=order.get("sizes", "").split(",")  # convert "44,45" → ["44","45"]
+    )
+
+    # -------------------------------------------------------
+    # 5. Save outputs
     # -------------------------------------------------------
     story_json_path = output_dir / "story.json"
-    write_story_json(order, story_json_path)
+    with open(story_json_path, "w", encoding="utf-8") as f:
+        json.dump({"story_text": story.text}, f, indent=4)
+
+    story_image_path = output_dir / "story.png"
+    story.image.save(story_image_path)
 
     print("Story generation complete.")
 
