@@ -43,21 +43,35 @@ jobs:
         with:
           python-version: "3.10"
 
-      # 6. Install dependencies
+      # 6. Cache pip packages
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # 7. Cache u2net model (rembg)
+      - name: Cache u2net model
+        uses: actions/cache@v3
+        with:
+          path: ~/.u2net
+          key: u2net-model
+
+      # 8. Install dependencies
       - name: Install dependencies
         run: |
-          pip install --upgrade git+https://github.com/sadeghhosseinzadeh/storygen.git
-          pip install "rembg[cpu]"
-          pip install pillow
+          pip install -r requirements.txt
 
-      # 7. Run story generator
+      # 9. Run story generator
       - name: Generate story
         run: |
           python story_engine/generate_story.py \
             --assets_dir assets \
             --output_dir output
 
-      # 8. Upload story back to release
+      # 10. Upload story back to release
       - name: Upload story to release
         run: |
           python story_engine/upload_to_release.py \
