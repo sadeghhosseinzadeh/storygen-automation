@@ -1,8 +1,9 @@
 import json
 import os
 import argparse
+import yaml
+import importlib
 from pathlib import Path
-from storygen.story import generate_story  # your package
 
 def load_order_json(order_path):
     with open(order_path, "r", encoding="utf-8") as f:
@@ -22,22 +23,34 @@ def main():
     order_json_path = assets_dir / "order.json"
     order = load_order_json(order_json_path)
 
-    # 2. Find photo
-    photo_path = assets_dir / "photo_1.png"
-
-    # 3. Normalize template number
+    # 2. Normalize template number
     template_raw = str(order.get("template", "1")).strip()
     template_name = f"template_{template_raw}"
 
-    # 4. Generate story (returns an Image)
-    story_img = generate_story(
-        template_name=template_name,
-        shoe_path=str(photo_path),
-        model_name=order.get("model_name", "Unknown Model"),
-        sizes=order.get("sizes", "").split(",")
-    )
+    # 3. Load template config
+    with open("story_engine/config/templates.yml") as f:
+        templates_config = yaml.safe_load(f)
 
-    # 5. Save outputs
+    template_info = templates_config.get(template_name)
+    if not template_info:
+        raise ValueError(f"Template {template_name} not defined in config")
+
+    # 4. Validate required fields
+    for field in template_info["required_fields"]:
+        if field not in order:
+            raise ValueError(f"Missing required field: {field}")
+
+    # 5. Dynamically import the template module
+    module = importlib.import_module(f"story_engine.templates.{template_name}")
+    generate_func = getattr(module, template_name)
+
+    # 6. Collect arguments from order.json
+    args_dict = {field: order[field] for field in template_info["required_fields"]}
+
+    # 7. Generate story image
+    story_img = generate_func(**args_dict)
+
+    # 8. Save outputs
     story_json_path = output_dir / "story.json"
     with open(story_json_path, "w", encoding="utf-8") as f:
         json.dump({
