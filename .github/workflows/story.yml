@@ -67,14 +67,15 @@ jobs:
       # 9. Run story generator
       - name: Generate story
         run: |
-          python story_engine/generate_story.py \
+          python storygen/story_engine/generate_story.py \
             --assets_dir assets \
             --output_dir output
-
+      
       # 10. Upload story back to release
       - name: Upload story to release
         run: |
-          python story_engine/upload_to_release.py \
+          python storygen/story_engine/upload_to_release.py \
             --upload_url "${{ github.event.release.upload_url }}" \
             --story_dir output \
             --token "${{ secrets.GITHUB_TOKEN }}"
+
