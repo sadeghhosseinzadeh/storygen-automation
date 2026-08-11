@@ -1,0 +1,23 @@
+# story_engine/config/templates.yml
+
+template_1:
+  required_fields:
+    - shoe_img
+    - main_color
+    - second_color
+    - model_name
+    - sizes
+  optional_fields: []
+  description: "Single shoe image with brand text and sizes"
+
+template_2:
+  required_fields:
+    - shoe_img1
+    - shoe_img2
+    - main_color
+    - second_color
+    - brand_name
+    - model_name
+    - sizes
+  optional_fields: []
+  description: "Two shoe images with brand name, model, and sizes"
