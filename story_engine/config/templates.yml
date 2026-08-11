@@ -2,7 +2,7 @@
 
 template_1:
   required_fields:
-    - shoe_img
+    - photo_1
     - main_color
     - second_color
     - model_name
@@ -12,8 +12,8 @@ template_1:
 
 template_2:
   required_fields:
-    - shoe_img1
-    - shoe_img2
+    - photo_1
+    - photo_2
     - main_color
     - second_color
     - brand_name
