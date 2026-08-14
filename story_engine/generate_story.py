@@ -1,8 +1,8 @@
 import json
-import os
 import argparse
 import yaml
 import importlib
+import inspect
 from pathlib import Path
 from storygen.processing import remove_background, extract_colors
 
@@ -12,8 +12,8 @@ def load_order_json(order_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--assets_dir", required=True, help="Directory containing order.json and photos")
-    parser.add_argument("--output_dir", required=True, help="Directory to write story.png and story.json")
+    parser.add_argument("--assets_dir", required=True)
+    parser.add_argument("--output_dir", required=True)
     args = parser.parse_args()
 
     assets_dir = Path(args.assets_dir)
@@ -21,17 +21,15 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Load order.json
-    order_json_path = assets_dir / "order.json"
-    order = load_order_json(order_json_path)
+    order = load_order_json(assets_dir / "order.json")
 
-    # 2. Normalize template number
+    # 2. Normalize template name
     template_raw = str(order.get("template", "1")).strip()
     template_name = f"template_{template_raw}"
 
     # 3. Load template config
     with open("story_engine/config/templates.yml") as f:
         templates_config = yaml.safe_load(f)
-
     template_info = templates_config.get(template_name)
     if not template_info:
         raise ValueError(f"Template {template_name} not defined in config")
@@ -41,42 +39,48 @@ def main():
         if field not in order:
             raise ValueError(f"Missing required field: {field}")
 
-    # 5. Dynamically import the template module
+    # 5. Import template function
     module = importlib.import_module(f"storygen.templates.{template_name}")
     generate_func = getattr(module, template_name)
 
-    # 6. Collect arguments from order.json
-    photo_path = assets_dir / order["photo_1"]
-    # Remove background
-    shoe_img = remove_background(str(photo_path))
+    # 6. Build argument pool
+    args_dict = {}
 
-    # Extract colors automatically
-    main_color, second_color = extract_colors(shoe_img)
+    # Always prepare photo_1
+    photo_1_path = assets_dir / order["photo_1"]
+    photo_1_img = remove_background(str(photo_1_path))
+    args_dict["photo_1"] = photo_1_img
 
-    # Build final args for template
-    args_dict = {
-        "photo_1": shoe_img,
-        "main_color": main_color,
-        "second_color": second_color,
-        "model_name": order["model_name"],
-        "sizes": order["sizes"]
-    }
+    # If template needs colors, compute them
+    main_color, second_color = extract_colors(photo_1_img)
+    args_dict["main_color"] = main_color
+    args_dict["second_color"] = second_color
 
-    # 7. Generate story image
-    story_img = generate_func(**args_dict)
+    # Add other fields from order.json
+    for key, value in order.items():
+        if key in ["photo_1"]:  # already handled
+            continue
+        if key.startswith("photo_"):
+            args_dict[key] = str(assets_dir / value)
+        else:
+            args_dict[key] = value
 
-    # 8. Save outputs
-    story_json_path = output_dir / "story.json"
-    with open(story_json_path, "w", encoding="utf-8") as f:
+    # 7. Filter args based on template signature
+    sig = inspect.signature(generate_func)
+    final_args = {k: v for k, v in args_dict.items() if k in sig.parameters}
+
+    # 8. Generate story
+    story_img = generate_func(**final_args)
+
+    # 9. Save outputs
+    with open(output_dir / "story.json", "w", encoding="utf-8") as f:
         json.dump({
             "order_id": order["order_id"],
             "status": "done",
             "story_file": "story.png"
         }, f, indent=4)
 
-    story_image_path = output_dir / "story.png"
-    story_img.save(story_image_path)
-
+    story_img.save(output_dir / "story.png")
     print("Story generation complete.")
 
 if __name__ == "__main__":
