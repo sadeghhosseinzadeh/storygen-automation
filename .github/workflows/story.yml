@@ -59,6 +59,13 @@ jobs:
           path: ~/.u2net
           key: u2net-model
 
+      # 7.5 Install system dependencies for Cairo
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+
+
       # 8. Install dependencies
       - name: Install dependencies
         run: |
