@@ -61,12 +61,28 @@ def main():
     for key, value in order.items():
         if key == "photo_1":
             continue
+    
         if key.startswith("photo_"):
-            # Convert photo paths to actual images
             img_path = assets_dir / value
             args_dict[key] = remove_background(str(img_path))
-        else:
-            args_dict[key] = value
+            continue
+    
+        args_dict[key] = value
+    
+    # --- FIELD MAPPING FOR NEW TEMPLATES ---
+    if "shop_name_en" in order:
+        args_dict["shop_name"] = order["shop_name_en"]
+    
+    if "shop_name_fa" in order:
+        args_dict["shop_name"] = order["shop_name_fa"]
+    
+    if "logo" in order:
+        args_dict["username"] = order["logo"].replace(".png", "")
+    
+    # Filter args based on template signature
+    sig = inspect.signature(generate_func)
+    final_args = {k: v for k, v in args_dict.items() if k in sig.parameters}
+
     
     # Filter args based on template signature
     sig = inspect.signature(generate_func)
