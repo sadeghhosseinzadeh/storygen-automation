@@ -1,6 +1,6 @@
 # story_engine/config/templates.yml
 
-template_1:
+template_1a:
   required_fields:
     - photo_1
     - model_name
@@ -8,12 +8,28 @@ template_1:
   optional_fields: []
   description: "Single shoe image with brand text and sizes"
 
-template_2:
+template_2a:
   required_fields:
     - photo_1
     - photo_2
-    - brand_name
+    - sizes
+    - brand
     - model_name
     - sizes
+    - logo
+    - shop_name_en
+  optional_fields: []
+  description: "Two shoe images with brand name, model, and sizes"
+
+template_2b:
+  required_fields:
+    - photo_1
+    - photo_2
+    - sizes
+    - brand
+    - model_name
+    - sizes
+    - logo
+    - shop_name_en
   optional_fields: []
   description: "Two shoe images with brand name, model, and sizes"
