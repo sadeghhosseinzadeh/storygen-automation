@@ -44,26 +44,34 @@ def main():
     generate_func = getattr(module, template_name)
 
     # 6. Build argument pool
+    # Build argument pool
     args_dict = {}
-
+    
     # Always prepare photo_1
     photo_1_path = assets_dir / order["photo_1"]
     photo_1_img = remove_background(str(photo_1_path))
     args_dict["photo_1"] = photo_1_img
-
-    # If template needs colors, compute them
+    
+    # Colors (only used by some templates)
     main_color, second_color = extract_colors(photo_1_img)
     args_dict["main_color"] = main_color
     args_dict["second_color"] = second_color
-
-    # Add other fields from order.json
+    
+    # Add ALL fields from order.json
     for key, value in order.items():
-        if key in ["photo_1"]:  # already handled
+        if key == "photo_1":
             continue
         if key.startswith("photo_"):
-            args_dict[key] = str(assets_dir / value)
+            # Convert photo paths to actual images
+            img_path = assets_dir / value
+            args_dict[key] = remove_background(str(img_path))
         else:
             args_dict[key] = value
+    
+    # Filter args based on template signature
+    sig = inspect.signature(generate_func)
+    final_args = {k: v for k, v in args_dict.items() if k in sig.parameters}
+
 
     # 7. Filter args based on template signature
     sig = inspect.signature(generate_func)
