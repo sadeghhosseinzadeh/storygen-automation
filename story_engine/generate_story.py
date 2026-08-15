@@ -55,8 +55,14 @@ def main():
         args_dict["shop_name"] = order["shop_name_en"]
     if "shop_name_fa" in order:
         args_dict["shop_name"] = order["shop_name_fa"]
-    if "logo" in order:
-        args_dict["logo"] = str(assets_dir / order["logo"])
+    
+    # Logo handling
+    logo_value = order.get("logo")
+    if logo_value:  # only if not None or empty
+        args_dict["logo"] = str(assets_dir / logo_value)
+    else:
+        args_dict["logo"] = None
+
 
     # 7. Filter args based on template signature
     sig = inspect.signature(generate_func)
