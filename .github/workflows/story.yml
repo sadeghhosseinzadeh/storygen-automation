@@ -69,8 +69,9 @@ jobs:
       # 8. Install dependencies
       - name: Install dependencies
         run: |
-          pip install -e .        
+          pip install git+https://github.com/sadeghhosseinzadeh/storygen.git@main
           pip install -r requirements.txt
+
 
 
       # 9. Run story generator
