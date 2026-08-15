@@ -65,11 +65,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcairo2-dev pkg-config python3-dev
 
-
+ 
       # 8. Install dependencies
       - name: Install dependencies
         run: |
+          pip install -e .        
           pip install -r requirements.txt
+
 
       # 9. Run story generator
       - name: Generate story
