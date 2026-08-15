@@ -24,11 +24,10 @@ template_2b:
   required_fields:
     - photo_1
     - photo_2
+    - model_name
+    - shop_name_en
     - sizes
     - brand
-    - model_name
-    - sizes
+  optional_fields: 
     - logo
-    - shop_name_en
-  optional_fields: []
   description: "Two shoe images with brand name, model, and sizes"
