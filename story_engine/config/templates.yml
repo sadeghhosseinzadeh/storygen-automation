@@ -18,6 +18,16 @@ template_1b:
   optional_fields: []
   description: "Single shoe image with brand text and sizes"
 
+template_1norm:
+  required_fields:
+    - photo_1
+    - model_name
+    - shop_name_en
+    - sizes
+    - brand
+  optional_fields: []
+  description: "Single shoe image with brand text and sizes"
+  
 template_1rem:
   required_fields:
     - photo_1
