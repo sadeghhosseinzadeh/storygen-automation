@@ -14,11 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 0. Fix slow Azure mirror
+    # 0. Fix slow Azure mirror everywhere
       - name: Switch to fast Ubuntu mirror
         run: |
-          sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list
-          
+          sudo find /etc/apt -type f -name "*.list" -exec sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' {} +
+          sudo find /etc/apt -type f -name "*.sources" -exec sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' {} +
+          sudo apt-get -o Acquire::Retries=0 update
+
       # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
