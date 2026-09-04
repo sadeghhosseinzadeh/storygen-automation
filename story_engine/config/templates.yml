@@ -71,3 +71,16 @@ template_2np:
   optional_fields: 
     - logo
   description: "Two shoe images with brand name, model, and sizes"
+
+
+template_2t:
+  required_fields:
+    - photo_1
+    - photo_2
+    - model_name
+    - shop_name_en
+    - sizes
+    - brand
+  optional_fields: 
+    - logo
+  description: "Two shoe images with brand name, model, and sizes"
