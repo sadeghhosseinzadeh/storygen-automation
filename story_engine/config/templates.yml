@@ -19,6 +19,28 @@ template_1b:
     - logo
   description: "Single shoe image with brand text and sizes"
 
+template_1c:
+  required_fields:
+    - photo_1
+    - model_name
+    - shop_name_en
+    - sizes
+    - brand
+  optional_fields: 
+    - logo
+  description: "Single shoe image with brand text and sizes"
+
+template_1d:
+  required_fields:
+    - photo_1
+    - model_name
+    - shop_name_en
+    - sizes
+    - brand
+  optional_fields: 
+    - logo
+  description: "Single shoe image with brand text and sizes"
+  
 template_1g:
   required_fields:
     - photo_1
