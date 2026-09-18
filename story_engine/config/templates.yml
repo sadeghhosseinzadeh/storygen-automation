@@ -41,7 +41,7 @@ template_1d:
     - logo
   description: "Single shoe image with brand text and sizes"
 
-template_1d:
+template_1e:
   required_fields:
     - photo_1
     - model_name
