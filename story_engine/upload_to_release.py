@@ -10,7 +10,6 @@ def upload_asset(upload_url, file_path, token):
     file_name = file_path.name
 
     # Normalize upload URL
-    # Remove ALL GitHub template placeholders
     upload_url = upload_url.replace("{?name,label}", "")
     upload_url = upload_url.replace("{name}", "")
     upload_url = upload_url.replace("{label}", "")
@@ -19,7 +18,6 @@ def upload_asset(upload_url, file_path, token):
     if "?" not in upload_url:
         upload_url = f"{upload_url}?name={file_name}"
     else:
-        # If ? exists but no name parameter, append it
         if "name=" not in upload_url:
             upload_url = f"{upload_url}&name={file_name}"
 
@@ -41,17 +39,17 @@ def upload_asset(upload_url, file_path, token):
     print(f"Uploaded asset: {file_name}")
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--upload_url", required=True, help="GitHub release upload_url")
-    parser.add_argument("--story_dir", required=True, help="Directory containing story.png and story.json")
+    parser.add_argument("--story_dir", required=True, help="Directory containing outputs")
     parser.add_argument("--token", required=True, help="GitHub token")
     args = parser.parse_args()
 
     story_dir = Path(args.story_dir)
 
     story_image = story_dir / "story.png"
+    story_jpg = story_dir / "story.jpg"
     story_json = story_dir / "story.json"
 
     if not story_image.exists():
@@ -60,9 +58,14 @@ def main():
     if not story_json.exists():
         raise FileNotFoundError("story.json not found in output directory")
 
-    # Upload both files
+    # Upload PNG and JSON
     upload_asset(args.upload_url, story_image, args.token)
     upload_asset(args.upload_url, story_json, args.token)
+
+    # Upload JPG if present
+    if story_jpg.exists():
+        upload_asset(args.upload_url, story_jpg, args.token)
+        print("Uploaded story.jpg successfully.")
 
     print("All story assets uploaded successfully.")
 
