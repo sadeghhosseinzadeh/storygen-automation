@@ -6,3 +6,5 @@ pyyaml>=6.0
 
 # Optional helpers
 numpy>=1.24
+arabic-reshaper
+python-bidi
