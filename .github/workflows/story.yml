@@ -66,11 +66,13 @@ jobs:
           path: ~/.u2net
           key: u2net-model
 
-      # 7.5 Install system dependencies for Cairo
+      # 7.5 Install system dependencies for Cairo and Arabic/Persian RTL fonts
       - name: Install system dependencies
         run: |
           sudo apt-get -o Acquire::Retries=0 update
-          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev \
+            libraqm-dev libraqm0 libfribidi-dev libharfbuzz-dev \
+            fonts-farsiweb fonts-dejavu-core
  
       # 8. Install dependencies (Always forces the latest storygen build)
       - name: Install dependencies
