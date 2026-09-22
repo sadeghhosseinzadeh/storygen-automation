@@ -40,6 +40,10 @@ def main():
 
     # 5. Import template function
     module = importlib.import_module(f"storygen.templates.{template_name}")
+    # Debug print: test what Persian text looks like
+    from storygen.utils import reshape_persian
+    test_reshaped = reshape_persian("استعلام قیمت")
+    print(f"DEBUG: Original='استعلام قیمت' -> Reshaped='{test_reshaped}'")
     generate_func = getattr(module, template_name)
 
     # 6. Build argument pool
