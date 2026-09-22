@@ -63,7 +63,6 @@ def main():
     else:
         args_dict["logo"] = None
 
-
     # 7. Filter args based on template signature
     sig = inspect.signature(generate_func)
     final_args = {k: v for k, v in args_dict.items() if k in sig.parameters}
@@ -72,15 +71,26 @@ def main():
     story_img = generate_func(**final_args)
 
     # 9. Save outputs
+    # 9.1 Save PNG (High-resolution, lossless)
+    story_img.save(output_dir / "story.png")
+
+    # 9.2 Save JPG (Fast loading preview)
+    try:
+        rgb_img = story_img.convert("RGB")
+        rgb_img.save(output_dir / "story.jpg", "JPEG", quality=95)
+    except Exception as e:
+        print(f"Warning: JPEG generation skipped: {e}")
+
+    # 9.3 Save metadata JSON
     with open(output_dir / "story.json", "w", encoding="utf-8") as f:
         json.dump({
             "order_id": order["order_id"],
             "status": "done",
-            "story_file": "story.png"
+            "story_file": "story.png",
+            "story_file_jpg": "story.jpg"
         }, f, indent=4)
 
-    story_img.save(output_dir / "story.png")
-    print("Story generation complete.")
+    print("Story generation complete (PNG & JPG saved).")
 
 if __name__ == "__main__":
     main()
