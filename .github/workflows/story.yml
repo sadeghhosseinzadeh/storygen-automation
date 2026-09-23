@@ -25,32 +25,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Install GitHub CLI
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get -o Acquire::Retries=5 update
-          sudo apt-get install -y gh
-
-      # 3. Authenticate GitHub CLI
-      - name: Authenticate GH CLI
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
-      # 4. Download release assets
+      # 2. Download release assets with retry (Prevents race conditions)
       - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p assets
-          gh release download "${{ github.event.release.tag_name }}" \
-            --repo "${{ github.repository }}" \
-            --dir assets
+          TAG="${{ github.event.release.tag_name }}"
+          echo "Downloading assets for release tag: $TAG"
+          
+          SUCCESS=0
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i: downloading assets from release $TAG..."
+            if gh release download "$TAG" --repo "${{ github.repository }}" --dir assets --pattern "*"; then
+              # Check if order.json was downloaded
+              if [ -f "assets/order.json" ]; then
+                echo "✅ All release assets downloaded successfully!"
+                SUCCESS=1
+                break
+              fi
+            fi
+            echo "Assets not ready yet, waiting 3 seconds..."
+            sleep 3
+          done
 
-      # 5. Set up Python
+          if [ $SUCCESS -ne 1 ]; then
+            echo "❌ Failed to download assets after 5 attempts."
+            exit 1
+          fi
+
+          ls -la assets
+
+      # 3. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # 6. Cache pip packages for standard dependencies (excludes storygen)
+      # 4. Cache pip packages for standard dependencies (excludes storygen)
       - name: Cache pip
         uses: actions/cache@v3
         with:
@@ -59,22 +71,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # 7. Cache u2net model (rembg)
+      # 5. Cache u2net model (rembg)
       - name: Cache u2net model
         uses: actions/cache@v3
         with:
           path: ~/.u2net
           key: u2net-model
 
-      # 7.5 Install system dependencies for Cairo and Arabic/Persian RTL fonts
+      # 6. Install system dependencies for Cairo and Arabic/Persian RTL fonts
       - name: Install system dependencies
         run: |
           sudo apt-get -o Acquire::Retries=0 update
           sudo apt-get install -y libcairo2-dev pkg-config python3-dev \
             libraqm-dev libraqm0 libfribidi-dev libharfbuzz-dev \
             fonts-farsiweb fonts-dejavu-core
- 
-      # 8. Install dependencies (Always forces the latest storygen build)
+
+      # 7. Install dependencies (Always forces the latest storygen build)
       - name: Install dependencies
         run: |
           pip install --upgrade pip
@@ -82,14 +94,14 @@ jobs:
           pip install --no-cache-dir --upgrade --force-reinstall git+https://github.com/sadeghhosseinzadeh/storygen.git@main
           pip install -r requirements.txt
 
-      # 9. Run story generator
+      # 8. Run story generator
       - name: Generate story
         run: |
           python story_engine/generate_story.py \
             --assets_dir assets \
             --output_dir output
-      
-      # 10. Upload story assets back to release (uploads story.png, story.jpg, story.json)
+
+      # 9. Upload story assets back to release (uploads story.png, story.jpg, story.json)
       - name: Upload story to release
         run: |
           python story_engine/upload_to_release.py \
