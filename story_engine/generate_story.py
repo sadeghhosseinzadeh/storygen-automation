@@ -1,3 +1,4 @@
+# story_engine/generate_story.py
 import json
 import argparse
 import yaml
@@ -5,9 +6,11 @@ import importlib
 import inspect
 from pathlib import Path
 
+
 def load_order_json(order_path):
     with open(order_path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -22,54 +25,70 @@ def main():
     # 1. Load order.json
     order = load_order_json(assets_dir / "order.json")
 
-    # 2. Normalize template name
-    template_raw = str(order.get("template", "1")).strip()
-    template_name = f"template_{template_raw}"  
+    # 2. Normalize template name (handles '1a', 'stpl_1a', 'template_1a')
+    template_raw = str(order.get("template", "1")).strip().lower()
+    if template_raw.startswith("template_"):
+        template_name = template_raw
+    elif template_raw.startswith("stpl_"):
+        template_name = f"template_{template_raw[5:]}"
+    else:
+        template_name = f"template_{template_raw}"
 
     # 3. Load template config
-    with open("story_engine/config/templates.yml") as f:
+    with open("story_engine/config/templates.yml", "r", encoding="utf-8") as f:
         templates_config = yaml.safe_load(f)
+
     template_info = templates_config.get(template_name)
     if not template_info:
-        raise ValueError(f"Template {template_name} not defined in config")
+        raise ValueError(f"Template '{template_name}' not defined in config/templates.yml")
 
     # 4. Validate required fields
-    for field in template_info["required_fields"]:
+    for field in template_info.get("required_fields", []):
         if field not in order:
             raise ValueError(f"Missing required field: {field}")
 
     # 5. Import template function
     module = importlib.import_module(f"storygen.templates.{template_name}")
-    # Debug print: test what Persian text looks like
-    from storygen.utils import reshape_persian
-    test_reshaped = reshape_persian("استعلام قیمت")
-    print(f"DEBUG: Original='استعلام قیمت' -> Reshaped='{test_reshaped}'")
     generate_func = getattr(module, template_name)
 
     # 6. Build argument pool
     args_dict = {}
     for key, value in order.items():
-        if key.startswith("photo_"):
-            args_dict[key] = str(assets_dir / value)  # pass path
+        if key.startswith("photo_") and value:
+            photo_path = assets_dir / value
+            if photo_path.exists():
+                args_dict[key] = str(photo_path)
+            else:
+                args_dict[key] = str(photo_path)
         else:
             args_dict[key] = value
 
-    # --- FIELD MAPPING ---
-    if "shop_name_en" in order:
-        args_dict["shop_name"] = order["shop_name_en"]
-    if "shop_name_fa" in order:
-        args_dict["shop_name"] = order["shop_name_fa"]
-    
-    # Logo handling
-    logo_value = order.get("logo")
-    if logo_value:  # only if not None or empty
-        args_dict["logo"] = str(assets_dir / logo_value)
+    # --- FIELD MAPPING (Shop Names) ---
+    shop_en = order.get("shop_name_en")
+    shop_fa = order.get("shop_name_fa")
+
+    # Default generic shop_name preference: Persian first, fallback English, or empty
+    args_dict["shop_name"] = shop_fa or shop_en or ""
+    args_dict["shop_name_en"] = shop_en or ""
+    args_dict["shop_name_fa"] = shop_fa or ""
+
+    # --- LOGO HANDLING ---
+    logo_filename = order.get("logo")
+    if logo_filename:
+        logo_path = assets_dir / logo_filename
+        if logo_path.exists():
+            args_dict["logo"] = str(logo_path)
+        else:
+            print(f"Warning: Logo specified in order.json ({logo_filename}) but not found in assets.")
+            args_dict["logo"] = None
     else:
         args_dict["logo"] = None
 
     # 7. Filter args based on template signature
     sig = inspect.signature(generate_func)
     final_args = {k: v for k, v in args_dict.items() if k in sig.parameters}
+
+    print(f"Generating story for order {order.get('order_id')} with template {template_name}...")
 
     # 8. Generate story
     story_img = generate_func(**final_args)
@@ -94,7 +113,8 @@ def main():
             "story_file_jpg": "story.jpg"
         }, f, indent=4)
 
-    print("Story generation complete (PNG & JPG saved).")
+    print("✅ Story generation complete (PNG & JPG saved).")
+
 
 if __name__ == "__main__":
     main()
