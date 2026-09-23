@@ -25,36 +25,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Download release assets with retry (Prevents race conditions)
+      # 2. Download release assets directly
       - name: Download release assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p assets
-          TAG="${{ github.event.release.tag_name }}"
-          echo "Downloading assets for release tag: $TAG"
-          
-          SUCCESS=0
-          for i in 1 2 3 4 5; do
-            echo "Attempt $i: downloading assets from release $TAG..."
-            if gh release download "$TAG" --repo "${{ github.repository }}" --dir assets --pattern "*"; then
-              # Check if order.json was downloaded
-              if [ -f "assets/order.json" ]; then
-                echo "✅ All release assets downloaded successfully!"
-                SUCCESS=1
-                break
-              fi
-            fi
-            echo "Assets not ready yet, waiting 3 seconds..."
-            sleep 3
+          echo '${{ toJson(github.event.release.assets) }}' | jq -r '.[] | .browser_download_url' | while read url; do
+            echo "Downloading $url..."
+            curl -sSL "$url" -o "assets/$(basename "$url")"
           done
 
-          if [ $SUCCESS -ne 1 ]; then
-            echo "❌ Failed to download assets after 5 attempts."
+          echo "Downloaded assets:"
+          ls -la assets
+
+          if [ ! -f "assets/order.json" ]; then
+            echo "❌ order.json is missing!"
             exit 1
           fi
-
-          ls -la assets
 
       # 3. Set up Python
       - name: Set up Python
